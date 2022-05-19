@@ -1,28 +1,27 @@
 import {
   LAMPORTS_PER_SOL,
-  AccountInfo,
-  PublicKey,
-  Connection,
-  Keypair,
+  // AccountInfo,
+  // PublicKey,
+  // Connection,
+  // Keypair,
 } from '@solana/web3.js';
-import fs from 'fs';
 import { BN, Program, web3 } from '@project-serum/anchor';
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import { StorageType } from './storage-type';
 
 import { getAtaForMint } from './accounts';
 import { CLUSTERS, DEFAULT_CLUSTER } from './constants';
-import {
-  Uses,
-  UseMethod,
-  Metadata,
-  MetadataKey,
-} from '@metaplex-foundation/mpl-token-metadata';
+// import {
+//   Uses,
+//   UseMethod,
+//   Metadata,
+// } from '@metaplex-foundation/mpl-token-metadata';
+// import { NamedTupleMember } from 'typescript';
 
 export async function getCandyMachineV2Config(
   walletKeyPair: web3.Keypair,
   anchorProgram: Program,
-  configPath: any,
+  configString: any,
 ): Promise<{
   storage: StorageType;
   nftStorageKey: string;
@@ -58,11 +57,6 @@ export async function getCandyMachineV2Config(
   uuid: string;
   arweaveJwk: string;
 }> {
-  if (configPath === undefined) {
-    throw new Error('The configPath is undefined');
-  }
-  const configString = fs.readFileSync(configPath);
-
   //@ts-ignore
   const config = JSON.parse(configString);
 
@@ -222,12 +216,12 @@ export async function getCandyMachineV2Config(
   };
 }
 
-export function shuffle(array) {
+export function shuffle(array: number[]) {
   let currentIndex = array.length,
     randomIndex;
 
   // While there remain elements to shuffle...
-  while (currentIndex != 0) {
+  while (currentIndex !== 0) {
     // Pick a remaining element...
     randomIndex = Math.floor(Math.random() * currentIndex);
     currentIndex--;
@@ -294,74 +288,74 @@ export function parsePrice(price: string, mantissa: number = LAMPORTS_PER_SOL) {
   return Math.ceil(parseFloat(price) * mantissa);
 }
 
-export function parseDate(date) {
+export function parseDate(date: string) {
   if (date === 'now') {
     return Date.now() / 1000;
   }
   return Date.parse(date) / 1000;
 }
 
-export const getMultipleAccounts = async (
-  connection: any,
-  keys: string[],
-  commitment: string,
-) => {
-  const result = await Promise.all(
-    chunks(keys, 99).map(chunk =>
-      getMultipleAccountsCore(connection, chunk, commitment),
-    ),
-  );
+// export const getMultipleAccounts = async (
+//   connection: any,
+//   keys: string[],
+//   commitment: string,
+// ) => {
+//   const result = await Promise.all(
+//     chunks(keys, 99).map(chunk =>
+//       getMultipleAccountsCore(connection, chunk, commitment),
+//     ),
+//   );
 
-  const array = result
-    .map(
-      a =>
-        //@ts-ignore
-        a.array.map(acc => {
-          if (!acc) {
-            return undefined;
-          }
+//   const array = result
+//     .map(
+//       a =>
+//         //@ts-ignore
+//         a.array.map(acc => {
+//           if (!acc) {
+//             return undefined;
+//           }
 
-          const { data, ...rest } = acc;
-          const obj = {
-            ...rest,
-            data: Buffer.from(data[0], 'base64'),
-          } as AccountInfo<Buffer>;
-          return obj;
-        }) as AccountInfo<Buffer>[],
-    )
-    //@ts-ignore
-    .flat();
-  return { keys, array };
-};
+//           const { data, ...rest } = acc;
+//           const obj = {
+//             ...rest,
+//             data: Buffer.from(data[0], 'base64'),
+//           } as AccountInfo<Buffer>;
+//           return obj;
+//         }) as AccountInfo<Buffer>[],
+//     )
+//     //@ts-ignore
+//     .flat();
+//   return { keys, array };
+// };
 
-export function chunks(array, size) {
-  return Array.apply(0, new Array(Math.ceil(array.length / size))).map(
-    (_, index) => array.slice(index * size, (index + 1) * size),
-  );
-}
+// export function chunks(array: number[], size: NamedTupleMember) {
+//   return Array.apply(0, new Array(Math.ceil(array.length / size))).map(
+//     (_, index) => array.slice(index * size, (index + 1) * size),
+//   );
+// }
 
-const getMultipleAccountsCore = async (
-  connection: any,
-  keys: string[],
-  commitment: string,
-) => {
-  const args = connection._buildArgs([keys], commitment, 'base64');
+// const getMultipleAccountsCore = async (
+//   connection: any,
+//   keys: string[],
+//   commitment: string,
+// ) => {
+//   const args = connection._buildArgs([keys], commitment, 'base64');
 
-  const unsafeRes = await connection._rpcRequest('getMultipleAccounts', args);
-  if (unsafeRes.error) {
-    throw new Error(
-      'failed to get info about account ' + unsafeRes.error.message,
-    );
-  }
+//   const unsafeRes = await connection._rpcRequest('getMultipleAccounts', args);
+//   if (unsafeRes.error) {
+//     throw new Error(
+//       'failed to get info about account ' + unsafeRes.error.message,
+//     );
+//   }
 
-  if (unsafeRes.result.value) {
-    const array = unsafeRes.result.value as AccountInfo<string[]>[];
-    return { keys, array };
-  }
+//   if (unsafeRes.result.value) {
+//     const array = unsafeRes.result.value as AccountInfo<string[]>[];
+//     return { keys, array };
+//   }
 
-  // TODO: fix
-  throw new Error();
-};
+//   // TODO: fix
+//   throw new Error();
+// };
 
 export const getPriceWithMantissa = async (
   price: number,
@@ -392,58 +386,58 @@ export function getCluster(name: string): string {
   return DEFAULT_CLUSTER.url;
 }
 
-export function parseUses(useMethod: string, total: number): Uses | null {
-  if (!!useMethod && !!total) {
-    const realUseMethod = (UseMethod as any)[useMethod];
-    if (!realUseMethod) {
-      throw new Error(`Invalid use method: ${useMethod}`);
-    }
-    return new Uses({ useMethod: realUseMethod, total, remaining: total });
-  }
-  return null;
-}
+// export function parseUses(useMethod: string, total: number): Uses | null {
+//   if (!!useMethod && !!total) {
+//     const realUseMethod = (UseMethod as any)[useMethod];
+//     if (!realUseMethod) {
+//       throw new Error(`Invalid use method: ${useMethod}`);
+//     }
+//     return new Uses({ useMethod: realUseMethod, total, remaining: total });
+//   }
+//   return null;
+// }
 
-export async function parseCollectionMintPubkey(
-  collectionMint: null | PublicKey,
-  connection: Connection,
-  walletKeypair: Keypair,
-) {
-  let collectionMintPubkey: null | PublicKey = null;
-  if (collectionMint) {
-    try {
-      collectionMintPubkey = new PublicKey(collectionMint);
-    } catch (error) {
-      throw new Error(
-        'Invalid Pubkey option. Please enter it as a base58 mint id',
-      );
-    }
-    const token = new Token(
-      connection,
-      collectionMintPubkey,
-      TOKEN_PROGRAM_ID,
-      walletKeypair,
-    );
-    await token.getMintInfo();
-  }
-  if (collectionMintPubkey) {
-    const metadata = await Metadata.findByMint(
-      connection,
-      collectionMintPubkey,
-    ).catch();
-    if (metadata.data.updateAuthority !== walletKeypair.publicKey.toString()) {
-      throw new Error(
-        'Invalid collection mint option. Metadata update authority does not match provided wallet keypair',
-      );
-    }
-    const edition = await Metadata.getEdition(connection, collectionMintPubkey);
-    if (
-      edition.data.key !== MetadataKey.MasterEditionV1 &&
-      edition.data.key !== MetadataKey.MasterEditionV2
-    ) {
-      throw new Error(
-        'Invalid collection mint. Provided collection mint does not have a master edition associated with it.',
-      );
-    }
-  }
-  return collectionMintPubkey;
-}
+// export async function parseCollectionMintPubkey(
+//   collectionMint: null | PublicKey,
+//   connection: Connection,
+//   walletKeypair: Keypair,
+// ) {
+//   let collectionMintPubkey: null | PublicKey = null;
+//   if (collectionMint) {
+//     try {
+//       collectionMintPubkey = new PublicKey(collectionMint);
+//     } catch (error) {
+//       throw new Error(
+//         'Invalid Pubkey option. Please enter it as a base58 mint id',
+//       );
+//     }
+//     const token = new Token(
+//       connection,
+//       collectionMintPubkey,
+//       TOKEN_PROGRAM_ID,
+//       walletKeypair,
+//     );
+//     await token.getMintInfo();
+//   }
+//   if (collectionMintPubkey) {
+//     const metadata = await Metadata.findByMint(
+//       connection,
+//       collectionMintPubkey,
+//     ).catch();
+//     if (metadata.data.updateAuthority !== walletKeypair.publicKey.toString()) {
+//       throw new Error(
+//         'Invalid collection mint option. Metadata update authority does not match provided wallet keypair',
+//       );
+//     }
+//     const edition = await Metadata.getEdition(connection, collectionMintPubkey);
+//     if (
+//       edition.data.key !== MetadataKey.MasterEditionV1 &&
+//       edition.data.key !== MetadataKey.MasterEditionV2
+//     ) {
+//       throw new Error(
+//         'Invalid collection mint. Provided collection mint does not have a master edition associated with it.',
+//       );
+//     }
+//   }
+//   return collectionMintPubkey;
+// }

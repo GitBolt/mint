@@ -24,22 +24,24 @@ import { sendTransactionWithRetryWithKeypair } from './cli/helpers/transactions'
 import log from 'loglevel';
 
 export async function mintV2(
-    keypair: string,
+    keypair: string | number[],
     env: string,
     candyMachineAddress: PublicKey,
     rpcUrl: string,
   ): Promise<string> {
     const mint = Keypair.generate();
-  
-    const userKeyPair = loadWalletKey(keypair);
+    if (typeof (keypair) === "string") {
+      keypair = JSON.parse(keypair)
+    }
+    const userKeyPair = loadWalletKey(keypair as number[]);
     const anchorProgram = await loadCandyProgramV2(userKeyPair, env, rpcUrl);
+    if(!anchorProgram) throw new Error("Anchor program undefined")
     const userTokenAccountAddress = await getTokenWallet(
       userKeyPair.publicKey,
       mint.publicKey,
     );
   
-    const candyMachine: CandyMachine =
-      await anchorProgram.account.candyMachine.fetch(candyMachineAddress);
+    const candyMachine = await anchorProgram.account.candyMachine.fetch(candyMachineAddress);
   
     const remainingAccounts = [];
     const signers = [mint, userKeyPair];

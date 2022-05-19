@@ -90,10 +90,10 @@ export function createUpdateMetadataInstruction(
 }
 
 export async function createCandyMachineV2Account(
-  anchorProgram,
+  anchorProgram: any,
   candyData: CandyMachineData,
-  payerWallet,
-  candyAccount,
+  payerWallet: any,
+  candyAccount: any,
 ) {
   const size =
     CONFIG_ARRAY_START_V2 +
