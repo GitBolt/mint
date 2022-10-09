@@ -22,9 +22,8 @@ import {
   B,
   A,
   CANDY_MACHINE_PROGRAM_V2_ID,
-} from './constants';
+} from './helpers/constants';
 import * as anchor from '@project-serum/anchor';
-import fs from 'fs';
 import { createCandyMachineV2Account } from './instructions';
 import { web3 } from '@project-serum/anchor';
 import log from 'loglevel';
@@ -44,7 +43,7 @@ export const deserializeAccount = (data: Buffer) => {
 
   if (accountInfo.delegateOption === 0) {
     accountInfo.delegate = null;
-    accountInfo.delegatedAmount = new u64(0);
+    accountInfo.delegatedAmount = new u64();
   } else {
     accountInfo.delegate = new PublicKey(accountInfo.delegate);
     accountInfo.delegatedAmount = u64.fromBuffer(accountInfo.delegatedAmount);
@@ -518,15 +517,12 @@ export const getTokenEntanglementEscrows = async (
   ];
 };
 
-export function loadWalletKey(keypair: any): Keypair {
-  if (!keypair || keypair == '') {
+export function loadWalletKey(keypair: number[]): Keypair {
+  if (!keypair) {
     throw new Error('Keypair is required!');
   }
-  const loaded = Keypair.fromSecretKey(
-    new Uint8Array(JSON.parse(fs.readFileSync(keypair).toString())),
-  );
-  log.info(`wallet public key: ${loaded.publicKey}`);
-  return loaded;
+  const loaded = Keypair.fromSecretKey(Uint8Array.from(keypair))
+  return loaded
 }
 
 export async function loadCandyProgram(
@@ -547,6 +543,7 @@ export async function loadCandyProgram(
     preflightCommitment: 'recent',
   });
   const idl = await anchor.Program.fetchIdl(CANDY_MACHINE_PROGRAM_ID, provider);
+  if(!idl) return
   const program = new anchor.Program(idl, CANDY_MACHINE_PROGRAM_ID, provider);
   log.debug('program id from anchor', program.programId.toBase58());
   return program;
@@ -573,6 +570,7 @@ export async function loadCandyProgramV2(
     CANDY_MACHINE_PROGRAM_V2_ID,
     provider,
   );
+  if(!idl) return
   const program = new anchor.Program(
     idl,
     CANDY_MACHINE_PROGRAM_V2_ID,
@@ -599,7 +597,7 @@ export async function loadFairLaunchProgram(
     preflightCommitment: 'recent',
   });
   const idl = await anchor.Program.fetchIdl(FAIR_LAUNCH_PROGRAM_ID, provider);
-
+  if (!idl) return
   return new anchor.Program(idl, FAIR_LAUNCH_PROGRAM_ID, provider);
 }
 
@@ -620,7 +618,7 @@ export async function loadAuctionHouseProgram(
     preflightCommitment: 'recent',
   });
   const idl = await anchor.Program.fetchIdl(AUCTION_HOUSE_PROGRAM_ID, provider);
-
+  if (!idl) return
   return new anchor.Program(idl, AUCTION_HOUSE_PROGRAM_ID, provider);
 }
 
@@ -644,7 +642,7 @@ export async function loadTokenEntanglementProgream(
     TOKEN_ENTANGLEMENT_PROGRAM_ID,
     provider,
   );
-
+  if (!idl) return
   return new anchor.Program(idl, TOKEN_ENTANGLEMENT_PROGRAM_ID, provider);
 }
 
@@ -656,8 +654,9 @@ export async function getTokenAmount(
   let amount = 0;
   if (!mint.equals(WRAPPED_SOL_MINT)) {
     try {
-      const token =
-        await anchorProgram.provider.connection.getTokenAccountBalance(account);
+      const token = await anchorProgram.provider.connection.getTokenAccountBalance(account);
+      if (!token) throw new Error("Token not found")
+      // @ts-ignore
       amount = token.value.uiAmount * Math.pow(10, token.value.decimals);
     } catch (e) {
       log.error(e);
